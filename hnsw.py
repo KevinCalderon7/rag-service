@@ -91,12 +91,8 @@ class HNSWIndex:
     def _distance(self, a: np.ndarray, b: np.ndarray) -> float:
         """Compute distance between two vectors."""
         if self.metric == "cosine":
-            # Cosine distance = 1 - cosine_similarity
-            norm_a = np.linalg.norm(a)
-            norm_b = np.linalg.norm(b)
-            if norm_a == 0 or norm_b == 0:
-                return 1.0
-            return 1.0 - float(np.dot(a, b) / (norm_a * norm_b))
+            # Vectors are pre-normalized on insert, so cosine distance = 1 - dot
+            return 1.0 - float(np.dot(a, b))
         else:  # euclidean
             return float(np.linalg.norm(a - b))
 
@@ -254,6 +250,10 @@ class HNSWIndex:
         """
         vector = np.asarray(vector, dtype=np.float32)
         assert vector.shape == (self.dim,), f"Expected dim {self.dim}, got {vector.shape}"
+        if self.metric == "cosine":
+            norm = np.linalg.norm(vector)
+            if norm > 0:
+                vector = vector / norm
 
         new_layer = self._random_layer()
         new_node = HNSWNode(id=id, vector=vector, layer=new_layer)
@@ -353,6 +353,10 @@ class HNSWIndex:
             return []
 
         vector = np.asarray(vector, dtype=np.float32)
+        if self.metric == "cosine":
+            norm = np.linalg.norm(vector)
+            if norm > 0:
+                vector = vector / norm
         ef = ef or max(self.ef_search, k)
 
         # Phase 1: Greedy descent to layer 0
