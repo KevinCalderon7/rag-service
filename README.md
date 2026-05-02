@@ -18,8 +18,8 @@ A production-grade semantic search and Retrieval-Augmented Generation (RAG) serv
            │       │                        │
    ┌───────▼──┐ ┌──▼──────────┐   ┌────────▼────────┐
    │  HNSW    │ │  Semantic   │   │  LLM Client     │
-   │  Index   │ │  Chunker    │   │  (Ollama OOM)   │
-   │ (custom) │ │             │   │                 │
+   │  Index   │ │  Chunker    │   │  (Claude/GPT/   │
+   │ (custom) │ │             │   │   Mock)         │
    └──────────┘ └─────────────┘   └─────────────────┘
 ```
 
@@ -46,7 +46,7 @@ Intelligently splits documents at semantic boundaries:
 
 ### 4. RAG Pipeline (`rag.py`)
 - Retrieves relevant chunks, assembles context with source attribution
-- Pluggable LLM backends: Anthropic Claude, OpenAI, or local Ollama OOM
+- Pluggable LLM backends: Anthropic Claude, OpenAI, or mock for testing
 - Configurable context window and retrieval depth
 
 ## Quick Start
