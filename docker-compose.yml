@@ -1,0 +1,46 @@
+version: "3.8"
+
+services:
+  # Main API server
+  api:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - EMBEDDING_MODEL=all-MiniLM-L6-v2
+      - LLM_PROVIDER=mock             # Change to 'anthropic' or 'openai'
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - PERSIST_DIR=/data
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    volumes:
+      - index_data:/data
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  # Async ingestion worker
+  worker:
+    build: .
+    command: celery -A worker worker --loglevel=info --concurrency=2
+    environment:
+      - EMBEDDING_MODEL=all-MiniLM-L6-v2
+      - PERSIST_DIR=/data
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    volumes:
+      - index_data:/data
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  # Message broker for async tasks
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+volumes:
+  index_data:
